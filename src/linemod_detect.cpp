@@ -236,14 +236,22 @@ struct Detector: public object_recognition_core::db::bases::ModelReaderBase {
         }
       }
 
-      // the model name can be specified on the command line.
-      Renderer3d *renderer_ = new Renderer3d(mesh_path);
+      // the model name can be specified on the command line.      
+      if(renderer_){
+        std::cout << "creating renderer WITHOUT glutinit" <<std::endl;
+        renderer_.reset(new Renderer3d(mesh_path,false));
+      }
+      else{
+        std::cout << "creating renderer WITH glutinit" <<std::endl;
+        renderer_.reset(new Renderer3d(mesh_path,true));
+      }
+      
       renderer_->set_parameters(renderer_width_, renderer_height_, renderer_focal_length_x_, renderer_focal_length_y_, renderer_near_, renderer_far_);
 
       std::remove(mesh_path.c_str());
 
       //initiaization of the renderer with the same parameters as used for learning
-      RendererIterator *renderer_iterator_ = new RendererIterator(renderer_, renderer_n_points_);
+      renderer_iterator_ = new RendererIterator(renderer_, renderer_n_points_);
       renderer_iterator_->angle_step_ = renderer_angle_step_;
       renderer_iterator_->radius_min_ = float(renderer_radius_min_);
       renderer_iterator_->radius_max_ = float(renderer_radius_max_);
@@ -334,7 +342,7 @@ struct Detector: public object_recognition_core::db::bases::ModelReaderBase {
       cv::Rect rect;
       cv::Matx33d R_temp(R_match.inv());
       cv::Vec3d up(-R_temp(0,1), -R_temp(1,1), -R_temp(2,1));
-      RendererIterator* it_r = renderer_iterators_.at(match.class_id);
+      boost::shared_ptr<RendererIterator> it_r = renderer_iterators_.at(match.class_id);
       cv::Mat depth_ref_;
       it_r->renderDepthOnly(depth_ref_, mask, rect, -T_match, up);
 
@@ -508,7 +516,10 @@ struct Detector: public object_recognition_core::db::bases::ModelReaderBase {
     /** The calibration matrices, per object and per template */
     std::map<std::string, std::vector<cv::Mat> > Ks_;
     /** The renderer initialized with objects meshes, per object*/
-    std::map<std::string, RendererIterator*> renderer_iterators_;
+    std::map<std::string, boost::shared_ptr<RendererIterator> > renderer_iterators_;
+    boost::shared_ptr<Renderer3d> renderer_;
+    RendererIterator* renderer_iterator_;
+    bool is_glut_initialized_;
     /** Renderer parameter: the number of points on the sphere */
     int renderer_n_points_;
     /** Renderer parameter: the angle step sampling in degrees*/

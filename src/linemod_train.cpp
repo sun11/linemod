@@ -173,11 +173,19 @@ namespace ecto_linemod
       return ecto::OK;
     }
 
-    Renderer3d renderer = Renderer3d(mesh_path);
-    renderer.set_parameters(*renderer_width_, *renderer_height_, *renderer_focal_length_x_,
+    if(renderer_){
+      std::cout << "creating renderer WITHOUT glutinit" <<std::endl;
+      renderer_.reset(new Renderer3d(mesh_path,false));
+    }
+    else{
+      std::cout << "creating renderer WITH glutinit" <<std::endl;
+      renderer_.reset(new Renderer3d(mesh_path,true));
+    }
+    
+    renderer_->set_parameters(*renderer_width_, *renderer_height_, *renderer_focal_length_x_,
                             *renderer_focal_length_y_, *renderer_near_, *renderer_far_);
 
-    RendererIterator renderer_iterator = RendererIterator(&renderer, *renderer_n_points_);
+    RendererIterator renderer_iterator = RendererIterator(renderer_, *renderer_n_points_);
     //set the RendererIterator parameters
     renderer_iterator.angle_step_ = *renderer_angle_step_;
     renderer_iterator.radius_min_ = float(*renderer_radius_min_);
@@ -275,6 +283,7 @@ namespace ecto_linemod
     ecto::spore<double> renderer_far_;
     ecto::spore<double> renderer_focal_length_x_;
     ecto::spore<double> renderer_focal_length_y_;
+    boost::shared_ptr<Renderer3d> renderer_;
   };
 } // namespace ecto_linemod
 
