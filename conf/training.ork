@@ -8,3 +8,5 @@ pipeline1:
       type: 'CouchDB'
       root: 'http://localhost:5984'
       collection: 'object_recognition'
+    renderer_width: 960
+    renderer_height: 540

@@ -112,7 +112,15 @@ struct Detector: public object_recognition_core::db::bases::ModelReaderBase {
       throw std::runtime_error("Unsupported type of input data: either use_rgb or use_depth (or both) parameters shouled be true");
     if(!(*use_rgb_) && *use_depth_)
       std::cout << "WARNING:: Gradients computation will be based on depth data (but not rgb image)." << std::endl;
-    detector_ = cv::linemod::getDefaultLINEMOD();
+    // if(!use_customed_linemod_)
+    //   detector_ = cv::linemod::getDefaultLINEMOD();
+    // else{
+      static const int T_DEFAULTS[] = {4, 15};
+      std::vector< cv::Ptr<cv::linemod::Modality> > modalities;
+      modalities.push_back(new cv::linemod::ColorGradient());
+      modalities.push_back(new cv::linemod::DepthNormal());
+      detector_ = new cv::linemod::Detector(modalities, std::vector<int>(T_DEFAULTS, T_DEFAULTS +2));
+    // }
 
     BOOST_FOREACH(const object_recognition_core::db::Document & document, db_documents) {
       std::string object_id = document.get_field<ObjectId>("object_id");
@@ -278,9 +286,9 @@ struct Detector: public object_recognition_core::db::bases::ModelReaderBase {
       if (*use_rgb_)
       {
         cv::Mat color;
-        if (color_->rows > 960)
-          cv::pyrDown(color_->rowRange(0, 960), color);
-        else
+//        if (color_->rows > 960)
+//          cv::pyrDown(color_->rowRange(0, 960), color);
+//        else
           color_->copyTo(color);
         if (*visualize_)
           display = color;
